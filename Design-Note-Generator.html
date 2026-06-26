@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Design Note Generator</title>
+<style>
+  :root{--bg:#f6f7fb;--card:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--accent:#0d9488;--accent-soft:#ecfdf5;--warn:#b45309;--radius:14px;--shadow:0 1px 3px rgba(16,24,40,.06)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:880px;margin:0 auto;padding:24px 16px 80px}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .brand{font-weight:700;font-size:18px}
+  .brand small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+  .pill{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin-bottom:18px}
+  h1{font-size:21px;margin:0 0 4px}
+  h2{font-size:16px;margin:0 0 10px;color:var(--accent)}
+  .sub{color:var(--muted);margin:0 0 16px}
+  .inputs{display:grid;gap:12px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  textarea{width:100%;min-height:120px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace}
+  button{font:inherit;border:1px solid var(--line);border-radius:10px;padding:10px 16px;background:#fff;color:var(--ink);cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  input[type=file]{font:inherit}
+  .note h2{margin-top:22px}
+  .note h2:first-child{margin-top:0}
+  .note ul{margin:0 0 6px;padding-left:20px}
+  .note li{margin:3px 0}
+  .note .intro{margin:0 0 8px;color:#374151}
+  .tag{display:inline-block;font-size:11px;font-weight:600;border-radius:6px;padding:1px 7px;margin-left:8px;vertical-align:middle}
+  .tag.must{background:#fff7ed;color:var(--warn);border:1px solid #fed7aa}
+  .tag.rec{background:var(--accent-soft);color:var(--accent);border:1px solid #99f6e4}
+  .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:8px}
+  .meta-grid div{background:#f9fafb;border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+  .meta-grid b{display:block;font-size:12px;color:var(--muted);font-weight:600}
+  .export{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .err{color:#b91c1c;font-size:14px;margin-top:8px}
+  .hide{display:none}
+  @media print{header.top,.input-card,.export,.err{display:none!important}.card{border:0;box-shadow:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">Project Design Note Generator<small>Internal tool · turns a client questionnaire into a build-team design note</small></div>
+    <span class="pill">Generator v0.2.0</span>
+  </header>
+
+  <div class="card input-card">
+    <h1>Load the client's answers</h1>
+    <p class="sub">Use the file the client emailed back (their saved Project Brief), or paste the data, then generate the design note.</p>
+    <div class="inputs">
+      <div class="row">
+        <label><b>Upload brief file&nbsp;</b><input type="file" id="file" accept=".html,.htm,.json"></label>
+        <button id="loadLocal" type="button">Load from this browser</button>
+      </div>
+      <details><summary>…or paste questionnaire data (JSON)</summary>
+        <textarea id="paste" placeholder='{"projectType":["Online store (e-commerce)"], ...}'></textarea>
+      </details>
+      <div class="row">
+        <button class="primary" id="gen" type="button">Generate design note →</button>
+        <span class="err" id="err"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card note hide" id="out"></div>
+  <div class="export hide" id="exportBar">
+    <button class="primary" id="download" type="button">⬇ Download design note</button>
+    <button id="print" type="button">🖨 Print / PDF</button>
+    <button id="copy" type="button">📋 Copy as Markdown</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var D={}, SECTIONS=[], META={};
+  var err=document.getElementById('err');
+
+  // ===== UI mockups (low-fidelity wireframes) =====
+  var EXPORT_CSS = `
+  .note h1{font-size:21px;margin:0 0 8px}
+  .note h2{font-size:16px;margin:22px 0 10px;color:#0d9488}
+  .note ul{margin:0 0 6px;padding-left:20px}.note li{margin:3px 0}
+  .note .intro{margin:0 0 8px;color:#374151}
+  .tag{display:inline-block;font-size:11px;font-weight:600;border-radius:6px;padding:1px 7px;margin-left:8px}
+  .tag.must{background:#fff7ed;color:#b45309;border:1px solid #fed7aa}
+  .tag.rec{background:#ecfdf5;color:#0d9488;border:1px solid #99f6e4}
+  .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:8px 0}
+  .meta-grid div{background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px}
+  .meta-grid b{display:block;font-size:12px;color:#6b7280}
+  .screens{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:8px}
+  .wf-frame{display:flex;flex-direction:column;gap:6px}
+  .wf-cap{font-size:13px;font-weight:600}.wf-purpose{font-size:12px;color:#6b7280;margin:0}
+  .wf{border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;padding:10px;height:300px;overflow:hidden;display:flex;flex-direction:column;gap:8px}
+  .wf .hd{display:flex;justify-content:space-between;align-items:center}
+  .wf .logo{width:64px;height:14px;background:#94a3b8;border-radius:4px}
+  .wf .nav{display:flex;gap:5px}.wf .nav i{width:30px;height:8px;background:#cbd5e1;border-radius:4px}
+  .wf .hero{height:64px;background:#e2e8f0;border-radius:6px}
+  .wf .line{height:7px;background:#e2e8f0;border-radius:3px}
+  .wf .btn{height:16px;background:#94a3b8;border-radius:5px}
+  .wf .pill{height:10px;background:#e2e8f0;border-radius:999px}
+  .wf .grid{display:grid;gap:6px}
+  .wf .card{background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:6px;display:flex;flex-direction:column;gap:4px}
+  .wf .thumb{height:38px;background:#e2e8f0;border-radius:4px}
+  .wf .box{background:#fff;border:1px solid #e2e8f0;border-radius:6px;flex:1}
+  .wf .ft{margin-top:auto;height:18px;background:#e2e8f0;border-radius:4px}
+  .wf .col{display:flex;flex-direction:column;gap:6px}
+  .wf .side{width:58px;background:#e2e8f0;border-radius:6px}
+  @media print{.screens{grid-template-columns:repeat(2,1fr)}.wf{height:250px}}
+  `;
+  (function(){ var st=document.createElement('style'); st.textContent=EXPORT_CSS; document.head.appendChild(st); })();
+
+  function rep(fn,n){ var s='';for(var i=0;i<n;i++)s+=fn(i);return s; }
+  function H(){ return '<div class="hd"><div class="logo"></div><div class="nav"><i></i><i></i><i></i></div></div>'; }
+  function card(){ return '<div class="card"><div class="thumb"></div><div class="line" style="width:80%"></div><div class="line" style="width:50%"></div></div>'; }
+  function lines(n,w){ return rep(function(i){return '<div class="line" style="width:'+(w||[90,70,80,55,65][i%5])+'%"></div>';},n); }
+  var WF={
+    home:function(){return H()+'<div class="hero"></div><div class="grid" style="grid-template-columns:repeat(4,1fr)">'+rep(card,4)+'</div><div class="grid" style="grid-template-columns:repeat(4,1fr)">'+rep(card,4)+'</div><div class="ft"></div>';},
+    listing:function(){return H()+'<div style="display:flex;gap:8px;flex:1"><div class="side col" style="width:70px;padding:6px;gap:5px">'+lines(6,80)+'</div><div class="grid" style="grid-template-columns:repeat(3,1fr);flex:1">'+rep(card,6)+'</div></div>';},
+    search:function(){return H()+'<div class="pill" style="height:16px"></div><div style="display:flex;gap:8px;flex:1"><div class="side" style="width:60px"></div><div class="grid" style="grid-template-columns:repeat(3,1fr);flex:1">'+rep(card,6)+'</div></div>';},
+    product:function(){return H()+'<div style="display:flex;gap:8px"><div class="box" style="flex:1.1;min-height:90px"></div><div class="col" style="flex:1">'+lines(2,90)+'<div class="line" style="width:40%;height:12px"></div><div style="display:flex;gap:5px">'+rep(function(){return '<div class="pill" style="width:22px"></div>';},4)+'</div>'+lines(2,80)+'<div class="btn" style="width:70%"></div></div></div><div class="line" style="width:30%"></div><div class="grid" style="grid-template-columns:repeat(3,1fr)">'+rep(card,3)+'</div>';},
+    cart:function(){return H()+'<div style="display:flex;gap:8px;flex:1"><div class="col" style="flex:1.4">'+rep(function(){return '<div class="card" style="flex-direction:row;align-items:center;gap:6px"><div class="thumb" style="width:36px;height:30px"></div><div class="col" style="flex:1">'+lines(2,70)+'</div><div class="pill" style="width:30px"></div></div>';},3)+'</div><div class="box col" style="flex:.8;padding:8px;gap:6px">'+lines(3,80)+'<div class="btn"></div></div></div>';},
+    checkout:function(){return H()+'<div style="display:flex;gap:8px;flex:1"><div class="col" style="flex:1.3;gap:5px"><div class="line" style="width:40%;height:10px"></div>'+lines(3,90)+'<div class="line" style="width:40%;height:10px"></div><div style="display:flex;gap:5px">'+rep(function(){return '<div class="pill" style="width:46px;height:16px"></div>';},4)+'</div><div class="pill" style="width:60%;height:16px"></div></div><div class="box col" style="flex:.8;padding:8px;gap:6px">'+lines(3,80)+'<div class="btn"></div></div></div>';},
+    confirmation:function(){return H()+'<div class="col" style="align-items:center;gap:8px;flex:1;justify-content:center"><div class="thumb" style="width:40px;height:40px;border-radius:50%"></div><div class="line" style="width:50%;height:10px"></div>'+lines(2,40)+'<div class="box" style="width:80%;height:46px;flex:none"></div></div>';},
+    account:function(){return H()+'<div style="display:flex;gap:5px">'+rep(function(){return '<div class="pill" style="width:46px"></div>';},4)+'</div><div class="col" style="flex:1;gap:5px">'+rep(function(){return '<div class="card" style="flex-direction:row;gap:6px"><div class="thumb" style="width:30px;height:24px"></div><div class="col" style="flex:1">'+lines(2,60)+'</div></div>';},4)+'</div>';},
+    login:function(){return H()+'<div class="col" style="flex:1;justify-content:center;align-items:center;gap:8px"><div class="box col" style="width:70%;flex:none;padding:12px;gap:8px"><div class="line" style="width:50%;height:10px"></div>'+lines(2,100)+'<div class="btn"></div><div class="line" style="width:60%"></div></div></div>';},
+    wishlist:function(){return H()+'<div class="line" style="width:30%;height:10px"></div><div class="grid" style="grid-template-columns:repeat(3,1fr);flex:1">'+rep(card,6)+'</div>';},
+    returns:function(){return H()+'<div class="line" style="width:40%;height:10px"></div><div class="col" style="flex:1;gap:6px">'+lines(1,80)+'<div class="pill" style="height:16px;width:90%"></div>'+lines(2,90)+'<div class="btn" style="width:50%"></div></div>';},
+    contact:function(){return H()+'<div style="display:flex;gap:8px;flex:1"><div class="col" style="flex:1;gap:6px">'+lines(4,90)+'<div class="btn" style="width:50%"></div></div><div class="box" style="flex:1"></div></div>';},
+    bloglist:function(){return H()+'<div class="col" style="flex:1;gap:6px">'+rep(function(){return '<div class="card" style="flex-direction:row;gap:8px"><div class="thumb" style="width:50px;height:36px"></div><div class="col" style="flex:1">'+lines(3,80)+'</div></div>';},3)+'</div>';},
+    blogpost:function(){return H()+'<div class="line" style="width:60%;height:12px"></div><div class="hero"></div><div class="col" style="gap:5px">'+lines(6,95)+'</div>';},
+    booking:function(){return H()+'<div style="display:flex;gap:8px;flex:1"><div class="grid" style="grid-template-columns:repeat(7,1fr);flex:1.2">'+rep(function(){return '<div class="thumb" style="height:16px"></div>';},28)+'</div><div class="col" style="flex:.7;gap:5px">'+rep(function(){return '<div class="pill" style="height:14px"></div>';},5)+'<div class="btn"></div></div></div>';},
+    gallery:function(){return H()+'<div class="grid" style="grid-template-columns:repeat(3,1fr);flex:1">'+rep(function(){return '<div class="thumb" style="height:60px"></div>';},9)+'</div>';},
+    adminDash:function(){return '<div style="display:flex;gap:8px;flex:1"><div class="side"></div><div class="col" style="flex:1;gap:6px"><div class="hd"><div class="line" style="width:30%"></div><div class="pill" style="width:40px"></div></div><div class="grid" style="grid-template-columns:repeat(3,1fr)">'+rep(function(){return '<div class="box" style="height:32px;flex:none"></div>';},3)+'</div>'+lines(5,100)+'</div></div>';},
+    adminList:function(){return '<div style="display:flex;gap:8px;flex:1"><div class="side"></div><div class="col" style="flex:1;gap:6px"><div class="hd"><div class="line" style="width:30%"></div><div class="btn" style="width:60px"></div></div>'+rep(function(){return '<div class="card" style="flex-direction:row;gap:6px;align-items:center"><div class="thumb" style="width:24px;height:18px"></div><div class="line" style="width:55%"></div><div class="pill" style="width:30px;margin-left:auto"></div></div>';},5)+'</div></div>';},
+    adminEdit:function(){return '<div style="display:flex;gap:8px;flex:1"><div class="side"></div><div class="col" style="flex:1;gap:6px"><div class="line" style="width:30%;height:10px"></div><div style="display:flex;gap:8px;flex:1"><div class="col" style="flex:1.3;gap:6px">'+lines(5,90)+'</div><div class="box" style="flex:.7"></div></div><div class="btn" style="width:40%"></div></div></div>';},
+    generic:function(label){return H()+'<div class="line" style="width:'+(label?40:30)+'%;height:11px"></div><div class="col" style="gap:5px;flex:1">'+lines(6,95)+'</div><div class="ft"></div>';}
+  };
+
+  function computeScreens(){
+    var s=[], shop=commerce(), pt=one('projectType');
+    function add(t,p,type,grp){ s.push({title:t,purpose:p,type:type||'generic',group:grp||'Storefront'}); }
+    add('Home / landing','First impression, key paths in','home','Storefront');
+    if(shop){
+      add('Category / product listing','Browse with filters & sorting','listing','Storefront');
+      add('Product detail','Variants, price, add to cart, reviews','product','Storefront');
+      add('Search results','Find products fast','search','Storefront');
+      add('Cart','Review items before checkout','cart','Storefront');
+      add('Checkout','Address, payment'+(has('payMethods','COD')?' incl. COD':'')+', place order','checkout','Storefront');
+      add('Order confirmation','Reassurance + next steps','confirmation','Storefront');
+      add('Account & orders','Order history, addresses, tracking','account','Account');
+      add('Login / OTP','Phone-OTP / sign-in','login','Account');
+      if(has('features','Wishlist')) add('Wishlist','Saved items','wishlist','Account');
+      add('Returns request','Start a return / RMA','returns','Account');
+      add('Admin — dashboard','Operations overview','adminDash','Admin');
+      add('Admin — products','Manage catalogue','adminList','Admin');
+      add('Admin — product editor','Add / edit product & variants','adminEdit','Admin');
+      add('Admin — orders','Process & fulfil orders','adminList','Admin');
+      if(holdsStock()) add('Admin — inventory','Stock, reorder, batches','adminList','Admin');
+    } else {
+      if(/Business|Portfolio/i.test(pt)||one('about')) add('About','Story & credibility','generic','Storefront');
+      if(has('offerings','Services')||/Business/i.test(pt)) add('Services / offerings','What you provide','generic','Storefront');
+    }
+    if(/Portfolio/i.test(pt)) add('Portfolio / gallery','Showcase work','gallery','Storefront');
+    if(has('features','Blog')||has('goals','Google')){ add('Blog list','Content hub','bloglist','Content'); add('Blog post','Article page','blogpost','Content'); }
+    if(has('features','Bookings')) add('Booking / appointments','Pick service & slot','booking','Storefront');
+    if(has('features','Contact')||!shop) add('Contact / enquiry','Capture leads','contact','Storefront');
+    if(has('features','FAQ')) add('FAQ / help','Answer common questions','generic','Content');
+    add('Legal & policy pages','Privacy, terms, refund, shipping','generic','Content');
+    add('404 / error','Graceful dead-ends','generic','Content');
+    return s;
+  }
+  function screensHtml(list){
+    return '<div class="screens">'+list.map(function(sc){
+      var inner=sc.type==='generic'?WF.generic(sc.title):(WF[sc.type]||WF.generic)();
+      return '<div class="wf-frame"><div class="wf-cap">'+esc(sc.title)+'</div><div class="wf">'+inner+'</div><p class="wf-purpose">'+esc(sc.purpose)+'</p></div>';
+    }).join('')+'</div>';
+  }
+
+  function arr(n){ var v=D[n]; if(v==null) return []; return Array.isArray(v)?v:[v]; }
+  function one(n){ return arr(n)[0]||''; }
+  function has(n,sub){ return arr(n).some(function(x){return new RegExp(sub,'i').test(x);}); }
+  function commerce(){ return /Online store/i.test(one('projectType')) || has('goals','sell'); }
+  function holdsStock(){ return has('stockModel','own')||has('stockModel','mix'); }
+  function dropship(){ return has('stockModel','Suppliers')||has('stockModel','mix'); }
+
+  function parseInput(text){
+    text=(text||'').trim(); if(!text) return null;
+    if(text[0]==='{'){ return JSON.parse(text); }
+    var m=text.match(/<script[^>]*id=["']wpq-data["'][^>]*>([\s\S]*?)<\/script>/i);
+    if(m) return JSON.parse(m[1]);
+    throw new Error('No questionnaire data found in that file.');
+  }
+
+  // ---------- the rules ----------
+  function S(title, intro, items){ SECTIONS.push({title:title,intro:intro||'',items:items||[]}); }
+  function build(){
+    SECTIONS=[]; META={};
+    var isShop=commerce(), sector=one('sector'), country=one('country'), regions=arr('regions');
+    var inEU=regions.indexOf('Europe (EU/UK)')>=0||regions.indexOf('Worldwide')>=0, india=country==='India';
+    META={ name:one('bizName')||'Untitled project', type:one('projectType')||'(not specified)',
+      sector:sector||'—', country:country||'—', launch:one('launch')||'—', budget:one('budget')||'—' };
+
+    // 1. Classification
+    S('1. Project classification & summary','', [
+      'Project type: '+(one('projectType')||'unspecified')+(isShop?' — treat as a transactional commerce build.':' — content/brochure build, no checkout.'),
+      'Goals: '+(arr('goals').join(', ')||'—'),
+      'Sector: '+(sector||'—')+'; Based in: '+(country||'—')+'; Customer regions: '+(regions.join(', ')||'—'),
+      one('about')?('Business: '+one('about')):'',
+      one('mustHave')?('Client’s #1 priority: '+one('mustHave')):''
+    ].filter(Boolean));
+
+    // 2. Recommended approach (always)
+    S('2. Recommended architecture approach','Default stance unless the client constraints say otherwise.', [
+      'Modular monolith on an edge platform (Cloudflare Workers + Next.js); clean internal modules, not microservices. [rec]',
+      'API-first / headless so a future mobile app reuses the same versioned (/v1) APIs. [rec]',
+      'Data-access (repository) layer over the database to avoid lock-in; money as integer minor units. [rec]',
+      isShop?'Event/outbox pattern for reliable side-effects (orders → notifications, analytics, ERP). [rec]':'Keep it simple: mostly content + forms; no heavy backend unless features below require it.'
+    ]);
+
+    // 3. Data model
+    if(isShop){
+      var dm=['Catalog: categories (tree), brands, products (spec), variants/SKUs, images, attributes, tags.',
+        'Marketplace-ready: separate product from a seller’s listing/offer; cart & orders reference listings (single-seller now, sellers additive later).'];
+      if(holdsStock()) dm.push('Inventory: stock ledger (derived on-hand), locations, reorder policies.');
+      if(has('perishable','Yes')) dm.push('Batch/lot + expiry tracking with FEFO (sector needs dated stock). [must]');
+      if(has('variations','Yes')) dm.push('Full variants (each shade/size = own SKU, price, stock, images).');
+      dm.push('Orders with a state machine + returns/RMA + refunds; payments with idempotency keys.');
+      S('3. Data model considerations','', dm);
+    } else {
+      S('3. Data model considerations','', [
+        'Lightweight: pages/sections via a simple CMS; '+(has('features','Blog')?'blog posts; ':'')+(has('features','Bookings')?'bookings/appointments; ':'')+'enquiry/contact submissions.',
+        'No product/order schema needed unless commerce is added later.'
+      ]);
+    }
+
+    // 4. Sourcing & ingestion
+    if(isShop && (dropship() || has('tools','Inventory')||one('integrations'))){
+      S('4. Catalog sourcing & ingestion','Plan multi-source ingestion (PIM hub) so supplier/catalog data flows in without re-keying.', [
+        dropship()?'Suppliers ship directly — ingest their stock/price via API, spreadsheet, scheduled file, or email-in (whatever each supplier supports).':'Hold-own-stock — catalog managed in admin; bulk spreadsheet import supported.',
+        'Per-source field mapping + validation + approval for new items; idempotent upserts.'
+      ]);
+    }
+
+    // 5. Fulfillment
+    if(isShop){
+      var ff=[];
+      if(holdsStock()) ff.push('Self-fulfilled: ship via a courier aggregator (e.g. Shiprocket) with label + tracking.');
+      if(dropship()) ff.push('Dropship: supplier ships; ingest tracking back to the customer.');
+      ff.push('Order-routing engine picks the source per line item; can split an order; atomic stock reservation at checkout.');
+      if(has('payMethods','COD')||india) ff.push('Pincode serviceability check + COD with return-to-origin (RTO) handling and reconciliation. [must if COD]');
+      S('5. Fulfillment & delivery','', ff);
+    }
+
+    // 6. Inventory / ERP
+    if(isShop && holdsStock()){
+      var inv=['Stock as a ledger (auditable); states: on-hand / reserved / available / on-order.',
+        'Reorder policy per SKU (safety stock, reorder point, lead time, preferred vendor) with modes: auto-PO / approval / alert-only.',
+        'Purchase orders + goods receipt; low-stock alarms (optionally to a ticketing tool).'];
+      if(has('perishable','Yes')) inv.push('FEFO allocation, expiry alerts and recall-by-batch. [must]');
+      S('6. Inventory & replenishment (ERP)','', inv);
+    }
+
+    // 7. Customers & auth
+    var auth=[];
+    if(isShop) auth.push((has('guest','Yes')?'Guest checkout enabled (recommended for conversion).':'Account required at checkout (client choice).'));
+    var logins=arr('login').filter(function(x){return !/No login/.test(x);});
+    auth.push('Login: '+(logins.join(', ')||(has('login','No login')?'no login needed':'phone-OTP recommended'))+ (logins.indexOf('Phone number + OTP')>=0?' — OTP is the India-standard primary method.':''));
+    auth.push('Sessions at the edge; Turnstile + rate limiting on auth/checkout.');
+    S('7. Customers & accounts', '', auth);
+
+    // 8. Orders, returns, payments, promotions
+    if(isShop){
+      S('8. Orders, payments & returns','', [
+        'Payment methods: '+(arr('payMethods').join(', ')||'TBD')+' — via Razorpay (Route-capable for future payouts); card data tokenized per RBI (never stored). [must]',
+        'Order lifecycle + cancellations + returns/RMA + refunds (incl. COD refunds via UPI/bank).',
+        has('promos','Yes')?'Promotions: coupon engine + automatic discount rules with margin guardrails.':'No promotions requested at launch (coupon engine can be added later).'
+      ]);
+    }
+
+    // 9. Notifications
+    var ch=[]; if(arr('login').indexOf('Phone number + OTP')>=0||has('tools','WhatsApp')) ch.push('SMS/WhatsApp');
+    ch.push('email'); if(has('features','chatbot')||has('features','Live chat')) ch.push('in-app chat');
+    S('9. Notifications & messaging','Provider-agnostic notifications via the outbox.', [
+      'Channels: '+ch.join(', ')+' — OTP, order/shipping/delivery updates'+(isShop?', refunds, abandoned cart':'')+'.',
+      has('tools','WhatsApp')?'Client already uses WhatsApp Business — wire WhatsApp order updates.':''
+    ].filter(Boolean));
+
+    // 10. Tax & invoicing
+    if(isShop){
+      S('10. Tax & invoicing','', [
+        india?'GST from day one: HSN-based tax per line, compliant invoices, credit notes for returns; e-invoicing above threshold. [must]':'Apply local sales tax/VAT; generate proper invoices and credit notes. [must]'
+      ]);
+    }
+
+    // 11. SEO
+    if(isShop || has('goals','Google') || has('features','Blog')){
+      S('11. SEO & discoverability','', [
+        'Server-side rendering for all public pages; clean stable slugs; per-page metadata + canonical URLs.',
+        isShop?'Product/Breadcrumb/Organization structured data (+ Review schema if reviews on).':'Article/Organization structured data; content/blog for organic reach.',
+        'Auto sitemap + robots.txt; Cloudflare Images; Core Web Vitals budget; Google Search Console.'
+      ]);
+    }
+
+    // 12. Content, merchandising, reviews, AI
+    var cf=[];
+    if(has('features','Reviews')) cf.push('Reviews/UGC with moderation (feeds Review schema + conversion).');
+    if(has('features','Blog')) cf.push('Blog/content engine.');
+    if(has('features','Bookings')) cf.push('Bookings/appointments scheduling.');
+    if(has('features','Multiple lang')) cf.push('Multi-language (i18n) scaffolding.');
+    if(has('features','Wishlist')) cf.push('Wishlist.');
+    if(has('features','chatbot')||has('features','Live chat')) cf.push('AI support chatbot grounded in catalog/orders/FAQ, with escalation to a ticket.');
+    if(has('features','Loyalty')) cf.push('Loyalty/rewards (later phase).');
+    cf.push('CMS-lite for banners/collections so content isn’t hardcoded.');
+    S('12. Content, features & support', 'Requested features mapped to modules.', cf);
+
+    // 13. Integrations
+    var integ=[]; arr('tools').forEach(function(t){ integ.push('Integrate with existing '+t+'.'); });
+    if(one('integrations')) integ.push('Client note: '+one('integrations'));
+    if(one('domain')) integ.push('Domain: '+one('domain')+(/^No/.test(one('domain'))?' — register one.':' — point DNS to hosting.'));
+    if(integ.length) S('13. Integrations & setup','', integ);
+
+    // 14. Compliance (reuse must-haves + team detail)
+    var comp=[];
+    if(isShop){ comp.push('Return/Refund/Shipping policy published. [must]');
+      comp.push(india?'GST registration + compliant invoices. [must]':'Local tax registration + invoices. [must]');
+      if(india) comp.push('Grievance Officer published (Consumer Protection E-Commerce Rules 2020). [must]'); }
+    if(one('collectsPersonal')!=='No'){ comp.push((india?'India DPDP Act':'Privacy law')+': consent capture, privacy policy, retention limits. [must]');
+      if(inEU) comp.push('GDPR (EU/UK customers): stronger consent + data rights. [must]'); }
+    if(isShop||logins.length) comp.push('Terms & Conditions. [must]');
+    if(/Beauty/i.test(sector)) comp.push('Cosmetics labelling, batch/expiry, regulated claims (CDSCO). [must]');
+    if(/Food/i.test(sector)) comp.push('Food licensing (FSSAI) + labelling/expiry. [must]');
+    if(/Health|pharma/i.test(sector)) comp.push('Health/pharma licensing + claims rules. [must]');
+    if(arr('payMethods').length||isShop) comp.push('PCI handled by Razorpay; never store card data.');
+    comp.push('Accessibility (WCAG) + mobile-first.');
+    S('14. Compliance & legal', 'Treat as a parallel workstream from the start.', comp);
+
+    // 15. Engineering foundations (always)
+    S('15. Engineering foundations (Phase 0)','Non-negotiable before real traffic/payments.', [
+      'Dev/staging/prod environments; CI/CD with preview deploys; versioned DB migrations.',
+      'Unit + end-to-end tests; observability (logs, metrics, error tracking, alerts); backups/DR.',
+      'Security hardening: WAF, rate limiting, Turnstile, secret scanning; Cloudflare Images; design system + accessibility.'
+    ]);
+
+    // 16. Recommended roadmap (tailored)
+    var phases=['Phase 0 — Foundations (always).'];
+    if(isShop){
+      phases.push('Phase 1 — Catalog + admin + ingestion (+ CMS-lite, SEO).');
+      phases.push('Phase 2 — Customers + cart (OTP/guest, reservation).');
+      phases.push('Phase 3 — Checkout, payments'+(has('payMethods','COD')?' + COD':'')+' + tax/GST + notifications'+(has('promos','Yes')?' + coupons':'')+'.');
+      phases.push('Phase 4 — Fulfillment'+(has('payMethods','COD')||india?' (serviceability/COD/RTO)':'')+' + returns'+(dropship()?' + supplier ingestion automation':'')+'.');
+      if(has('features','Reviews')||has('features','Blog')||has('features','chatbot')||has('features','Live chat')) phases.push('Phase 5 — Reviews/content + AI support.');
+      if(holdsStock()) phases.push('Phase 6 — Inventory & replenishment (ERP).');
+      phases.push('Future — Marketplace (if multiple sellers later).');
+    } else {
+      phases.push('Phase 1 — Pages + CMS + brand/design system.');
+      phases.push('Phase 2 — Core features ('+(arr('features').slice(0,4).join(', ')||'content, contact')+').');
+      if(has('goals','Google')||has('features','Blog')) phases.push('Phase 3 — SEO + content/blog.');
+      phases.push('Launch + analytics.');
+    }
+    S('16. Recommended roadmap', '', phases);
+
+    // 17. Open questions
+    var q=[];
+    if(isShop && !arr('payMethods').length) q.push('Which payment methods? (none selected)');
+    if(isShop && !one('catalogSize')) q.push('Approximate catalogue size?');
+    if(dropship()) q.push('How does each supplier share stock/price (API / sheet / email)?');
+    if(inEU) q.push('Confirm EU/UK sales — triggers GDPR scope.');
+    if(has('perishable','Yes')&&!/Beauty|Food|Health/i.test(sector)) q.push('Confirm regulated-product handling for dated stock.');
+    if(!one('country')) q.push('Country of operation (drives tax & privacy law).');
+    if(has('contentReady','need help')) q.push('Client needs help with branding/photos/copy — scope content production.');
+    if(!q.length) q.push('No blocking gaps detected — confirm timeline and budget band.');
+    S('17. Open questions for the client', '', q);
+
+    // 18. Screens & UI mockups
+    var screens=computeScreens();
+    SECTIONS.push({ title:'18. Screen inventory & UI mockups',
+      intro:'Mockup-first: every screen is wireframed up front so the client can react and approve before any expensive build. Low-fidelity on purpose — focus on layout and flow, not colours. '+screens.length+' screens identified.',
+      items: screens.map(function(sc){ return sc.group+': '+sc.title+' — '+sc.purpose; }),
+      html: screensHtml(screens) });
+
+    // 19. Sign-off gates
+    S('19. Client sign-off gates','Freeze scope progressively — changes are cheapest at the early gates.', [
+      'Gate A — Requirements & scope: this design note signed off. [must]',
+      'Gate B — UI mockups & user flows: the wireframes above approved before any visual/build work. [must]',
+      'Gate C — Visual design / design system: colours, typography, components approved.',
+      'Gate D — Phase UAT: sign-off at the end of each phase (especially payments).',
+      'Gate E — Pre-launch: legal pages, payments, content & data checks signed off before go-live. [must]'
+    ]);
+  }
+
+  // ---------- render ----------
+  function tagify(s){ return s.replace(/\[must\]/g,'<span class="tag must">must-have</span>').replace(/\[rec\]/g,'<span class="tag rec">recommended</span>'); }
+  function render(){
+    var out=document.getElementById('out');
+    var h='<h1>Design note — '+esc(META.name)+'</h1>'+
+      '<div class="meta-grid">'+
+      Object.keys({Type:1,Sector:1,Country:1,Launch:1,Budget:1}).map(function(k){
+        var v={Type:META.type,Sector:META.sector,Country:META.country,Launch:META.launch,Budget:META.budget}[k];
+        return '<div><b>'+k+'</b>'+esc(v)+'</div>';
+      }).join('')+'</div>';
+    SECTIONS.forEach(function(s){
+      h+='<h2>'+esc(s.title)+'</h2>';
+      if(s.intro) h+='<p class="intro">'+esc(s.intro)+'</p>';
+      if(s.items.length) h+='<ul>'+s.items.map(function(i){return '<li>'+tagify(esc(i))+'</li>';}).join('')+'</ul>';
+      if(s.html) h+=s.html;
+    });
+    out.innerHTML=h; out.classList.remove('hide'); document.getElementById('exportBar').classList.remove('hide');
+    out.scrollIntoView({behavior:'smooth'});
+  }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+  function markdown(){
+    var m='# Design note — '+META.name+'\n\n'+'- Type: '+META.type+'\n- Sector: '+META.sector+'\n- Country: '+META.country+'\n- Launch: '+META.launch+'\n- Budget: '+META.budget+'\n\n';
+    SECTIONS.forEach(function(s){ m+='## '+s.title+'\n'; if(s.intro)m+='_'+s.intro+'_\n'; s.items.forEach(function(i){ m+='- '+i.replace(/\[must\]/g,'(must-have)').replace(/\[rec\]/g,'(recommended)')+'\n'; }); m+='\n'; });
+    return m;
+  }
+
+  function run(){
+    err.textContent='';
+    try{
+      var file=document.getElementById('file').files[0];
+      var pasted=document.getElementById('paste').value.trim();
+      if(file){ var r=new FileReader(); r.onload=function(){ try{ D=parseInput(r.result)||{}; build(); render(); }catch(e){ err.textContent=e.message; } }; r.readAsText(file); return; }
+      if(pasted){ D=parseInput(pasted)||{}; }
+      else { var ls=localStorage.getItem('wpq_v1'); if(ls){ D=JSON.parse(ls); } else { err.textContent='Upload the client’s brief file, paste their data, or click "Load from this browser".'; return; } }
+      build(); render();
+    }catch(e){ err.textContent='Could not read that input: '+e.message; }
+  }
+
+  document.getElementById('gen').addEventListener('click',run);
+  document.getElementById('loadLocal').addEventListener('click',function(){
+    var ls=localStorage.getItem('wpq_v1'); if(!ls){ err.textContent='No questionnaire found in this browser. Open the questionnaire here first, or upload the client file.'; return; }
+    try{ D=JSON.parse(ls); build(); render(); }catch(e){ err.textContent=e.message; }
+  });
+  document.getElementById('print').addEventListener('click',function(){ window.print(); });
+  document.getElementById('copy').addEventListener('click',function(){ navigator.clipboard.writeText(markdown()).then(function(){ var b=document.getElementById('copy'),t=b.textContent;b.textContent='✓ Copied';setTimeout(function(){b.textContent=t;},1500); }); });
+  document.getElementById('download').addEventListener('click',function(){
+    var name=(META.name||'project').replace(/[^a-z0-9]+/gi,'-');
+    var doc='<!doctype html><meta charset="utf-8"><title>Design Note — '+esc(META.name)+'</title><style>body{font:15px/1.6 Arial;max-width:1000px;margin:24px auto;color:#1f2430;padding:0 16px}'+EXPORT_CSS+'</style><body class="note">'+document.getElementById('out').innerHTML+'</body>';
+    var b=new Blob([doc],{type:'text/html'}),a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Design-Note-'+name+'.html'; a.click();
+  });
+})();
+</script>
+</body>
+</html>

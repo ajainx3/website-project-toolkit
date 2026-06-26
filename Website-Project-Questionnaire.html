@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Website Project Questionnaire</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#ffffff; --ink:#1f2430; --muted:#6b7280; --line:#e5e7eb;
+    --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --warn:#b45309; --warn-soft:#fff7ed;
+    --radius:14px; --shadow:0 1px 3px rgba(16,24,40,.06),0 1px 2px rgba(16,24,40,.04);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:780px;margin:0 auto;padding:24px 16px 80px;}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+  .brand{font-weight:700;font-size:18px;letter-spacing:.2px}
+  .brand small{display:block;font-weight:400;color:var(--muted);font-size:12px;letter-spacing:0}
+  .save-state{font-size:13px;color:var(--muted)}
+  .progress{height:8px;background:var(--line);border-radius:999px;overflow:hidden;margin:8px 0 4px}
+  .progress > i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s ease}
+  .step-meta{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;}
+  h1{font-size:22px;margin:0 0 4px}
+  h2{font-size:19px;margin:0 0 6px}
+  .sub{color:var(--muted);margin:0 0 20px}
+  .field{margin:0 0 20px}
+  .field > label.q, .field > .q{display:block;font-weight:600;margin-bottom:8px}
+  .hint{font-weight:400;color:var(--muted);font-size:13px;margin-top:2px}
+  input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{
+    width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit;}
+  textarea{min-height:90px;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  .opts{display:grid;gap:8px}
+  .opts.cols{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .opt{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;background:#fff}
+  .opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .opt input{margin-top:3px}
+  .opt span{flex:1}
+  .opt span small{display:block;color:var(--muted);font-weight:400;font-size:12.5px}
+  fieldset{border:0;margin:0;padding:0}
+  legend{font-weight:600;margin-bottom:8px;padding:0}
+  .nav{display:flex;justify-content:space-between;gap:12px;margin-top:24px}
+  button{font:inherit;border-radius:10px;border:1px solid var(--line);padding:11px 18px;background:#fff;color:var(--ink);cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.ghost{background:transparent}
+  .err{color:#b91c1c;font-size:13.5px;margin-top:10px;min-height:18px}
+  .callout{background:var(--accent-soft);border:1px solid #c7d2fe;border-radius:10px;padding:14px 16px;margin:0 0 16px}
+  .mandatory{background:var(--warn-soft);border:1px solid #fed7aa}
+  .mandatory h3{margin:0 0 8px;font-size:15px;color:var(--warn)}
+  .must{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .must li{display:flex;gap:10px;align-items:flex-start}
+  .must li b{display:block}
+  .must li small{color:var(--muted)}
+  .dot{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--warn);margin-top:8px}
+  .review-sec{margin:0 0 18px}
+  .review-sec h3{font-size:15px;margin:0 0 6px;color:var(--accent)}
+  .review-sec table{width:100%;border-collapse:collapse}
+  .review-sec td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;font-size:14.5px}
+  .review-sec td.k{color:var(--muted);width:42%}
+  .export{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .footer-note{color:var(--muted);font-size:12.5px;text-align:center;margin-top:22px}
+  .pill{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600}
+  @media print{
+    body{background:#fff}
+    .wrap{max-width:100%;padding:0}
+    header.top,.progress,.step-meta,.nav,.save-state,.export,#startover{display:none!important}
+    .card{border:0;box-shadow:none;padding:0}
+    .step{display:block!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">Website Project Questionnaire<small>Prepared for your web studio · white-label template</small></div>
+    <div class="save-state" id="saveState">Your answers save automatically on this device.</div>
+  </header>
+
+  <div class="progress"><i id="bar"></i></div>
+  <div class="step-meta"><span id="stepName">Getting started</span><span id="stepCount">Step 1</span></div>
+
+  <form id="form" class="card" autocomplete="on" novalidate>
+
+    <!-- STEP 1 -->
+    <section class="step" data-title="About you & your business">
+      <h1>Tell us about your business</h1>
+      <p class="sub">A few basics so we know who we're building for. Takes about 5–10 minutes overall — your answers save as you go.</p>
+      <div class="field"><label class="q" for="bizName">Business / brand name <span class="hint">Required</span></label><input id="bizName" name="bizName" type="text" data-required placeholder="e.g. Beyond Gorgeous"></div>
+      <div class="field"><label class="q" for="contactName">Your name</label><input id="contactName" name="contactName" type="text" placeholder="Contact person"></div>
+      <div class="field"><label class="q" for="email">Email <span class="hint">Required</span></label><input id="email" name="email" type="email" data-required placeholder="you@example.com"></div>
+      <div class="field"><label class="q" for="phone">Phone / WhatsApp</label><input id="phone" name="phone" type="tel" placeholder="+91 …"></div>
+      <div class="field"><label class="q" for="existingSite">Existing website or social pages (if any)</label><input id="existingSite" name="existingSite" type="text" placeholder="links, comma separated"></div>
+      <div class="field"><label class="q" for="country">Where is your business based?</label>
+        <select id="country" name="country">
+          <option value="">Select…</option>
+          <option>India</option><option>United States</option><option>United Kingdom</option>
+          <option>United Arab Emirates</option><option>Canada</option><option>Australia</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label class="q" for="sector">What industry are you in?</label>
+        <select id="sector" name="sector">
+          <option value="">Select…</option>
+          <option>Beauty &amp; cosmetics</option><option>Fashion &amp; apparel</option><option>Food &amp; grocery</option>
+          <option>Health, wellness &amp; pharma</option><option>Electronics &amp; gadgets</option><option>Home &amp; furniture</option>
+          <option>Jewellery &amp; accessories</option><option>Services / consulting</option><option>Education</option>
+          <option>Hospitality / travel</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label class="q" for="about">In a sentence or two, what does your business do?</label><textarea id="about" name="about" placeholder="What you sell or offer, and who your customers are."></textarea></div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="step" data-title="Project type & goals" hidden>
+      <h2>What kind of website do you need?</h2>
+      <p class="sub">Pick the closest fit — this tailors the rest of the questions.</p>
+      <div class="field" data-required>
+        <fieldset>
+          <legend>Project type</legend>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="projectType" value="Online store (e-commerce)"><span>Online store (e-commerce)<small>Sell products or services and take orders online</small></span></label>
+            <label class="opt"><input type="radio" name="projectType" value="Business / brand website"><span>Business / brand website<small>Showcase your company, generate enquiries</small></span></label>
+            <label class="opt"><input type="radio" name="projectType" value="Portfolio website"><span>Portfolio website<small>Show your work or creative profile</small></span></label>
+            <label class="opt"><input type="radio" name="projectType" value="Blog / content site"><span>Blog / content site<small>Publish articles and content regularly</small></span></label>
+            <label class="opt"><input type="radio" name="projectType" value="Booking / appointments site"><span>Booking / appointments site<small>Let customers book services or slots</small></span></label>
+            <label class="opt"><input type="radio" name="projectType" value="Not sure / other"><span>Not sure / other<small>We'll help you figure it out</small></span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="field">
+        <fieldset>
+          <legend>What are your main goals? <span class="hint">Choose any</span></legend>
+          <div class="opts cols">
+            <label class="opt"><input type="checkbox" name="goals" value="Sell products or services online"><span>Sell online</span></label>
+            <label class="opt"><input type="checkbox" name="goals" value="Get enquiries / leads"><span>Get enquiries / leads</span></label>
+            <label class="opt"><input type="checkbox" name="goals" value="Take bookings or appointments"><span>Take bookings</span></label>
+            <label class="opt"><input type="checkbox" name="goals" value="Showcase work or brand"><span>Showcase brand</span></label>
+            <label class="opt"><input type="checkbox" name="goals" value="Publish content / blog"><span>Publish content</span></label>
+            <label class="opt"><input type="checkbox" name="goals" value="Grow on search engines (SEO)"><span>Be found on Google</span></label>
+            <label class="opt"><input type="checkbox" name="goals" value="Build a mailing list / community"><span>Build a community</span></label>
+          </div>
+        </fieldset>
+      </div>
+    </section>
+
+    <!-- STEP 3 (commerce) -->
+    <section class="step" data-title="What you'll sell" data-cond="commerce" hidden>
+      <h2>What will you sell?</h2>
+      <p class="sub">This helps us plan your catalogue and stock.</p>
+      <div class="field">
+        <fieldset><legend>What do you offer? <span class="hint">Choose any</span></legend>
+          <div class="opts cols">
+            <label class="opt"><input type="checkbox" name="offerings" value="Physical products"><span>Physical products</span></label>
+            <label class="opt"><input type="checkbox" name="offerings" value="Digital products / downloads"><span>Digital products</span></label>
+            <label class="opt"><input type="checkbox" name="offerings" value="Services"><span>Services</span></label>
+            <label class="opt"><input type="checkbox" name="offerings" value="Subscriptions"><span>Subscriptions</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="field"><label class="q" for="catalogSize">Roughly how many products will you list?</label>
+        <select id="catalogSize" name="catalogSize"><option value="">Select…</option><option>1–20</option><option>20–100</option><option>100–500</option><option>500+</option></select>
+      </div>
+      <div class="field">
+        <fieldset><legend>Do products come in variations? <span class="hint">e.g. size, shade, colour</span></legend>
+          <div class="opts"><label class="opt"><input type="radio" name="variations" value="Yes"><span>Yes</span></label><label class="opt"><input type="radio" name="variations" value="No"><span>No</span></label></div>
+        </fieldset>
+      </div>
+      <div class="field">
+        <fieldset><legend>Who holds the stock and ships orders?</legend>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="stockModel" value="We hold our own stock and ship"><span>We hold our own stock and ship</span></label>
+            <label class="opt"><input type="radio" name="stockModel" value="Suppliers ship directly (dropshipping)"><span>Suppliers ship directly to customers</span></label>
+            <label class="opt"><input type="radio" name="stockModel" value="A mix of both"><span>A mix of both</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="field">
+        <fieldset><legend>Do products have expiry dates or batches? <span class="hint">e.g. cosmetics, food, medicine</span></legend>
+          <div class="opts"><label class="opt"><input type="radio" name="perishable" value="Yes"><span>Yes</span></label><label class="opt"><input type="radio" name="perishable" value="No"><span>No</span></label></div>
+        </fieldset>
+      </div>
+    </section>
+
+    <!-- STEP 4 (commerce) -->
+    <section class="step" data-title="Payments & delivery" data-cond="commerce" hidden>
+      <h2>Payments &amp; delivery</h2>
+      <div class="field">
+        <fieldset><legend>How should customers be able to pay? <span class="hint">Choose any</span></legend>
+          <div class="opts cols">
+            <label class="opt"><input type="checkbox" name="payMethods" value="UPI"><span>UPI</span></label>
+            <label class="opt"><input type="checkbox" name="payMethods" value="Cards"><span>Cards</span></label>
+            <label class="opt"><input type="checkbox" name="payMethods" value="Net banking"><span>Net banking</span></label>
+            <label class="opt"><input type="checkbox" name="payMethods" value="Wallets"><span>Wallets</span></label>
+            <label class="opt"><input type="checkbox" name="payMethods" value="Cash on delivery (COD)"><span>Cash on delivery</span></label>
+            <label class="opt"><input type="checkbox" name="payMethods" value="Pay later / EMI"><span>Pay later / EMI</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="field">
+        <fieldset><legend>Where are your customers? <span class="hint">Choose any</span></legend>
+          <div class="opts cols">
+            <label class="opt"><input type="checkbox" name="regions" value="India"><span>India</span></label>
+            <label class="opt"><input type="checkbox" name="regions" value="Rest of Asia"><span>Rest of Asia</span></label>
+            <label class="opt"><input type="checkbox" name="regions" value="Europe (EU/UK)"><span>Europe (EU/UK)</span></label>
+            <label class="opt"><input type="checkbox" name="regions" value="North America"><span>North America</span></label>
+            <label class="opt"><input type="checkbox" name="regions" value="Middle East"><span>Middle East</span></label>
+            <label class="opt"><input type="checkbox" name="regions" value="Worldwide"><span>Worldwide</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="field">
+        <fieldset><legend>Who handles delivery?</legend>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="shipping" value="We arrange courier delivery"><span>We arrange courier delivery</span></label>
+            <label class="opt"><input type="radio" name="shipping" value="Suppliers deliver directly"><span>Suppliers deliver directly</span></label>
+            <label class="opt"><input type="radio" name="shipping" value="Digital only — no delivery"><span>Digital only — no delivery</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="field">
+        <fieldset><legend>Will you run discounts, coupons or offers?</legend>
+          <div class="opts"><label class="opt"><input type="radio" name="promos" value="Yes"><span>Yes</span></label><label class="opt"><input type="radio" name="promos" value="No"><span>No</span></label></div>
+        </fieldset>
+      </div>
+    </section>
+
+    <!-- STEP 5 -->
+    <section class="step" data-title="Customers & accounts" hidden>
+      <h2>Customers &amp; accounts</h2>
+      <div class="field" data-cond="commerce">
+        <fieldset><legend>Should customers be able to check out without creating an account?</legend>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="guest" value="Yes — allow guest checkout"><span>Yes — allow guest checkout <small>Usually best for sales</small></span></label>
+            <label class="opt"><input type="radio" name="guest" value="No — require an account"><span>No — require an account</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="field">
+        <fieldset><legend>How should customers log in? <span class="hint">Choose any</span></legend>
+          <div class="opts cols">
+            <label class="opt"><input type="checkbox" name="login" value="Phone number + OTP"><span>Phone + OTP</span></label>
+            <label class="opt"><input type="checkbox" name="login" value="Email + password"><span>Email + password</span></label>
+            <label class="opt"><input type="checkbox" name="login" value="Google / social login"><span>Google / social</span></label>
+            <label class="opt"><input type="checkbox" name="login" value="No login needed"><span>No login needed</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="field">
+        <fieldset><legend>Will the site collect personal details? <span class="hint">name, email, phone, address</span></legend>
+          <div class="opts"><label class="opt"><input type="radio" name="collectsPersonal" value="Yes"><span>Yes</span></label><label class="opt"><input type="radio" name="collectsPersonal" value="No"><span>No</span></label></div>
+        </fieldset>
+      </div>
+    </section>
+
+    <!-- STEP 6 -->
+    <section class="step" data-title="Features & content" hidden>
+      <h2>Features you'd like</h2>
+      <p class="sub">Pick what matters — we'll advise on what's essential.</p>
+      <div class="field">
+        <fieldset><legend>Helpful features <span class="hint">Choose any</span></legend>
+          <div class="opts cols">
+            <label class="opt"><input type="checkbox" name="features" value="Search & filters"><span>Search &amp; filters</span></label>
+            <label class="opt"><input type="checkbox" name="features" value="Customer reviews & ratings"><span>Reviews &amp; ratings</span></label>
+            <label class="opt"><input type="checkbox" name="features" value="Wishlist"><span>Wishlist</span></label>
+            <label class="opt"><input type="checkbox" name="features" value="Blog / articles"><span>Blog / articles</span></label>
+            <label class="opt"><input type="checkbox" name="features" value="Photo / video gallery"><span>Gallery</span></label>
+            <label class="opt"><input type="checkbox" name="features" value="Contact / enquiry form"><span>Contact form</span></label>
+            <label class="opt"><input type="checkbox" name="features" value="Newsletter signup"><span>Newsletter signup</span></label>
+            <label class="opt"><input type="checkbox" name="features" value="Live chat / chatbot support"><span>Chat / chatbot</span></label>
+            <label class="opt"><input type="checkbox" name="features" value="Bookings / appointments"><span>Bookings</span></label>
+            <label class="opt"><input type="checkbox" name="features" value="Multiple languages"><span>Multiple languages</span></label>
+            <label class="opt"><input type="checkbox" name="features" value="Loyalty / rewards"><span>Loyalty / rewards</span></label>
+            <label class="opt"><input type="checkbox" name="features" value="FAQ / help centre"><span>FAQ / help</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="field">
+        <fieldset><legend>Do you already have your branding &amp; content ready?</legend>
+          <div class="opts cols">
+            <label class="opt"><input type="checkbox" name="contentReady" value="Logo & brand colours"><span>Logo &amp; colours</span></label>
+            <label class="opt"><input type="checkbox" name="contentReady" value="Product photos"><span>Product photos</span></label>
+            <label class="opt"><input type="checkbox" name="contentReady" value="Written descriptions / text"><span>Written text</span></label>
+            <label class="opt"><input type="checkbox" name="contentReady" value="I'll need help creating these"><span>Need help with these</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="field"><label class="q" for="likeSites">Websites you like (for style inspiration)</label><input id="likeSites" name="likeSites" type="text" placeholder="links, comma separated"></div>
+    </section>
+
+    <!-- STEP 7 -->
+    <section class="step" data-title="Tools & setup" hidden>
+      <h2>Existing tools &amp; setup</h2>
+      <div class="field">
+        <fieldset><legend>Do you already use any of these? <span class="hint">Choose any</span></legend>
+          <div class="opts cols">
+            <label class="opt"><input type="checkbox" name="tools" value="Accounting software"><span>Accounting</span></label>
+            <label class="opt"><input type="checkbox" name="tools" value="Inventory / ERP system"><span>Inventory / ERP</span></label>
+            <label class="opt"><input type="checkbox" name="tools" value="CRM"><span>CRM</span></label>
+            <label class="opt"><input type="checkbox" name="tools" value="WhatsApp Business"><span>WhatsApp Business</span></label>
+            <label class="opt"><input type="checkbox" name="tools" value="Email marketing"><span>Email marketing</span></label>
+            <label class="opt"><input type="checkbox" name="tools" value="Social media shops"><span>Social shops</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="field">
+        <fieldset><legend>Do you already own a domain name? <span class="hint">e.g. yourbusiness.com</span></legend>
+          <div class="opts"><label class="opt"><input type="radio" name="domain" value="Yes"><span>Yes</span></label><label class="opt"><input type="radio" name="domain" value="No, I'll need one"><span>No, I'll need one</span></label></div>
+        </fieldset>
+      </div>
+      <div class="field"><label class="q" for="integrations">Anything specific the site must connect to or integrate with?</label><textarea id="integrations" name="integrations" placeholder="e.g. a supplier's system, a payment provider, a courier, an existing app"></textarea></div>
+    </section>
+
+    <!-- STEP 8: compliance (dynamic, read-only) -->
+    <section class="step" data-title="Things your site will need" hidden>
+      <h2>Things your website will need</h2>
+      <p class="sub">Based on your answers, these are typically required — many by law. We handle the setup; this is just so you're aware.</p>
+      <div class="callout mandatory">
+        <h3>Must-haves for your project</h3>
+        <ul class="must" id="mustList"></ul>
+      </div>
+      <div class="field" data-required>
+        <label class="opt"><input type="checkbox" name="ack" value="Acknowledged"><span>I understand my website will need to include the items above.</span></label>
+      </div>
+    </section>
+
+    <!-- STEP 9 -->
+    <section class="step" data-title="Timeline & priorities" hidden>
+      <h2>Timeline &amp; priorities</h2>
+      <div class="field"><label class="q" for="launch">When would you like to launch?</label>
+        <select id="launch" name="launch"><option value="">Select…</option><option>As soon as possible</option><option>Within 1 month</option><option>1–3 months</option><option>3–6 months</option><option>Flexible</option></select>
+      </div>
+      <div class="field"><label class="q" for="budget">Rough budget range <span class="hint">Optional — helps us recommend the right scope</span></label>
+        <select id="budget" name="budget"><option value="">Prefer not to say</option><option>Starter</option><option>Standard</option><option>Premium</option><option>Not sure yet</option></select>
+      </div>
+      <div class="field"><label class="q" for="mustHave">What's the single most important thing this website must achieve for you?</label><textarea id="mustHave" name="mustHave"></textarea></div>
+      <div class="field"><label class="q" for="notes">Anything else we should know?</label><textarea id="notes" name="notes"></textarea></div>
+    </section>
+
+    <!-- STEP 10: review -->
+    <section class="step" data-title="Review & send" hidden>
+      <h2>Review &amp; send</h2>
+      <p class="sub">Here's a summary of your answers. Save or print it, then email it back to us as an attachment.</p>
+      <div id="review"></div>
+      <div class="export">
+        <button type="button" class="primary" id="download">⬇ Save my answers (file)</button>
+        <button type="button" id="print">🖨 Print / Save as PDF</button>
+        <button type="button" id="copy">📋 Copy as text</button>
+      </div>
+      <p class="footer-note">After saving, please email the file to your studio contact. Thank you!</p>
+    </section>
+
+    <div class="err" id="err"></div>
+    <div class="nav">
+      <button type="button" class="ghost" id="back">← Back</button>
+      <div>
+        <button type="button" class="ghost" id="startover" title="Clear all answers on this device">Start over</button>
+        <button type="button" class="primary" id="next">Next →</button>
+      </div>
+    </div>
+  </form>
+
+  <p class="footer-note"><span class="pill">Template v0.1.0</span> &nbsp; White-label website project questionnaire · your answers stay on your device until you save and send them.</p>
+</div>
+
+<script>
+(function(){
+  var form=document.getElementById('form');
+  var steps=Array.prototype.slice.call(document.querySelectorAll('.step'));
+  var bar=document.getElementById('bar'), stepName=document.getElementById('stepName'), stepCount=document.getElementById('stepCount');
+  var err=document.getElementById('err'), KEY='wpq_v1';
+
+  function isCommerce(){
+    var t=(form.projectType||{}).value||'';
+    var sell=Array.prototype.some.call(form.querySelectorAll('input[name=goals]:checked'),function(c){return /Sell/.test(c.value)});
+    return t.indexOf('Online store')===0 || sell;
+  }
+  function applyConditions(){
+    var commerce=isCommerce();
+    steps.forEach(function(s){
+      if(s.getAttribute('data-cond')==='commerce') s.dataset.active = commerce?'true':'false';
+    });
+    // field-level conditions
+    form.querySelectorAll('.field[data-cond=commerce]').forEach(function(f){ f.style.display=commerce?'':'none'; });
+  }
+  function activeSteps(){ return steps.filter(function(s){return s.dataset.active!=='false';}); }
+  function current(){ return steps.find(function(s){return !s.hidden;}) || steps[0]; }
+
+  function show(stepEl){
+    steps.forEach(function(s){s.hidden=true;});
+    stepEl.hidden=false;
+    var list=activeSteps(), i=list.indexOf(stepEl);
+    bar.style.width=Math.round(((i+1)/list.length)*100)+'%';
+    stepName.textContent=stepEl.getAttribute('data-title');
+    stepCount.textContent='Step '+(i+1)+' of '+list.length;
+    document.getElementById('back').style.visibility = i===0?'hidden':'visible';
+    document.getElementById('next').textContent = (i===list.length-1)?'Done':'Next →';
+    err.textContent='';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function validate(stepEl){
+    var ok=true, msg='';
+    stepEl.querySelectorAll('[data-required]').forEach(function(f){
+      if(f.style.display==='none') return;
+      var inputs;
+      if(f.tagName==='INPUT'||f.tagName==='SELECT'||f.tagName==='TEXTAREA'){ inputs=[f]; }
+      else { inputs=Array.prototype.slice.call(f.querySelectorAll('input,select,textarea')); }
+      var name=inputs[0] && inputs[0].name;
+      var group=name?Array.prototype.slice.call(form.querySelectorAll('[name="'+name+'"]')):inputs;
+      var filled;
+      if(group[0] && (group[0].type==='radio'||group[0].type==='checkbox')) filled=group.some(function(g){return g.checked;});
+      else filled=group.some(function(g){return (g.value||'').trim()!=='';});
+      if(!filled){ ok=false; if(!msg) msg='Please complete the required field(s) on this step.'; }
+    });
+    err.textContent=ok?'':msg;
+    return ok;
+  }
+
+  function go(dir){
+    var list=activeSteps(), cur=current(), i=list.indexOf(cur);
+    if(dir>0 && !validate(cur)) return;
+    if(dir>0){ applyConditions(); list=activeSteps(); i=list.indexOf(cur); }
+    var ni=Math.min(Math.max(i+dir,0),list.length-1);
+    var target=list[ni];
+    if(target.getAttribute('data-title')==='Things your site will need') buildMustHaves();
+    if(target.getAttribute('data-title')==='Review & send') buildReview();
+    show(target);
+  }
+
+  // ---- must-haves ----
+  function val(n){ var el=form[n]; if(!el) return ''; if(el.value!==undefined) return el.value; return ''; }
+  function checked(n){ return Array.prototype.map.call(form.querySelectorAll('input[name="'+n+'"]:checked'),function(c){return c.value;}); }
+  function buildMustHaves(){
+    var list=document.getElementById('mustList'); list.innerHTML='';
+    var items=[];
+    var commerce=isCommerce(), country=val('country'), sector=val('sector');
+    var personal=(form.collectsPersonal||{}).value, regions=checked('regions'), pay=checked('payMethods');
+    var inEU=regions.indexOf('Europe (EU/UK)')>=0 || regions.indexOf('Worldwide')>=0;
+    var india=country==='India';
+    if(commerce){
+      items.push(['A clear Return, Refund &amp; Shipping policy','Customers and the law expect to know how returns and delivery work.']);
+      items.push([india?'GST-compliant tax invoices':'Proper tax invoices','Orders need a correct invoice with applicable taxes.']);
+      if(india) items.push(['A complaints / grievance contact','Online sellers in India must publish a grievance contact.']);
+    }
+    if(pay.length || commerce){
+      items.push(['Secure checkout','Payments are handled by a trusted payment provider; card details are never stored by you.']);
+    }
+    if(personal!=='No'){
+      items.push(['A Privacy Policy &amp; cookie/consent notice', india?'Required under India’s data-protection law (DPDP).':'Required where you collect personal data.']);
+      if(inEU) items.push(['EU/UK privacy compliance (GDPR)','Because you have customers in Europe, stronger privacy rules apply.']);
+    }
+    if(commerce || (form.login && checked('login').indexOf('No login needed')<0)) items.push(['Terms &amp; Conditions','The rules for using your site and buying from you.']);
+    if(/Beauty/.test(sector)) items.push(['Cosmetics labelling & expiry info','Ingredients, batch and expiry details; some claims are regulated.']);
+    if(/Food/.test(sector)) items.push(['Food licensing & labelling (e.g. FSSAI)','Food sellers need licences and clear labelling/expiry.']);
+    if(/Health|pharma/i.test(sector)) items.push(['Health/pharma licensing & claims rules','Regulated products and health claims need care.']);
+    items.push(['Accessible, mobile-friendly design','Good practice for all visitors — and increasingly expected.']);
+    items.forEach(function(it){
+      var li=document.createElement('li');
+      li.innerHTML='<span class="dot"></span><span><b>'+it[0]+'</b><small>'+it[1]+'</small></span>';
+      list.appendChild(li);
+    });
+    window._mustHaves=items.map(function(it){return it[0].replace(/&amp;/g,'&');});
+  }
+
+  // ---- review / export ----
+  var GROUPS=[
+    ['About you & your business',[['bizName','Business name'],['contactName','Contact'],['email','Email'],['phone','Phone'],['existingSite','Existing links'],['country','Based in'],['sector','Industry'],['about','About']]],
+    ['Project type & goals',[['projectType','Project type'],['goals','Goals']]],
+    ["What you'll sell",[['offerings','Offers'],['catalogSize','Catalogue size'],['variations','Variations'],['stockModel','Stock & shipping'],['perishable','Expiry/batches']]],
+    ['Payments & delivery',[['payMethods','Payment methods'],['regions','Customer regions'],['shipping','Delivery'],['promos','Discounts/coupons']]],
+    ['Customers & accounts',[['guest','Guest checkout'],['login','Login methods'],['collectsPersonal','Collects personal data']]],
+    ['Features & content',[['features','Features'],['contentReady','Content ready'],['likeSites','Inspiration']]],
+    ['Tools & setup',[['tools','Existing tools'],['domain','Owns domain'],['integrations','Integrations']]],
+    ['Timeline & priorities',[['launch','Launch'],['budget','Budget'],['mustHave','Most important'],['notes','Notes']]]
+  ];
+  function fieldVal(n){
+    var nodes=form.querySelectorAll('input[name="'+n+'"],select[name="'+n+'"],textarea[name="'+n+'"]');
+    if(!nodes.length) return '';
+    if(nodes[0].type==='radio'){ var r=form.querySelector('input[name="'+n+'"]:checked'); return r?r.value:''; }
+    if(nodes[0].type==='checkbox'){ return checked(n).join(', '); }
+    return (nodes[0].value||'').trim();
+  }
+  function buildReview(){
+    var html='';
+    GROUPS.forEach(function(g){
+      var rows='';
+      g[1].forEach(function(f){ var v=fieldVal(f[0]); if(v) rows+='<tr><td class="k">'+f[1]+'</td><td>'+escapeHtml(v)+'</td></tr>'; });
+      if(rows) html+='<div class="review-sec"><h3>'+g[0]+'</h3><table>'+rows+'</table></div>';
+    });
+    if(window._mustHaves && window._mustHaves.length){
+      html+='<div class="review-sec"><h3>Things your site will need</h3><table>'+window._mustHaves.map(function(m){return '<tr><td colspan="2">• '+escapeHtml(m)+'</td></tr>';}).join('')+'</table></div>';
+    }
+    document.getElementById('review').innerHTML=html;
+  }
+  function escapeHtml(s){ return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+
+  function asText(){
+    var out='WEBSITE PROJECT BRIEF\n'+(fieldVal('bizName')||'')+'\n\n';
+    GROUPS.forEach(function(g){
+      var lines=[];
+      g[1].forEach(function(f){ var v=fieldVal(f[0]); if(v) lines.push('  - '+f[1]+': '+v); });
+      if(lines.length) out+=g[0].toUpperCase()+'\n'+lines.join('\n')+'\n\n';
+    });
+    if(window._mustHaves) out+='THINGS THE SITE WILL NEED\n'+window._mustHaves.map(function(m){return '  - '+m;}).join('\n')+'\n';
+    return out;
+  }
+  function collect(){ var d={}; Array.prototype.forEach.call(form.elements,function(el){
+      if(!el.name) return;
+      if(el.type==='checkbox'||el.type==='radio'){ if(el.checked){ (d[el.name]=d[el.name]||[]).push(el.value);} }
+      else if((el.value||'').trim()!=='') d[el.name]=el.value;
+    }); if(window._mustHaves) d._mustHaves=window._mustHaves; return d; }
+  function download(){
+    var name=(fieldVal('bizName')||'project').replace(/[^a-z0-9]+/gi,'-');
+    var data=JSON.stringify(collect()).replace(/</g,'\\u003c');
+    var doc='<!doctype html><meta charset="utf-8"><title>Project Brief — '+escapeHtml(fieldVal('bizName'))+'</title>'+
+      '<body style="font:15px/1.6 Arial;max-width:720px;margin:24px auto;color:#1f2430"><h1>Website Project Brief</h1>'+
+      document.getElementById('review').innerHTML+
+      '\n<scr'+'ipt id="wpq-data" type="application/json">'+data+'<\/scr'+'ipt></body>';
+    var blob=new Blob([doc],{type:'text/html'}), a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download='Project-Brief-'+name+'.html'; a.click();
+  }
+
+  // ---- persistence ----
+  function save(){ try{ var d={}; Array.prototype.forEach.call(form.elements,function(el){
+      if(!el.name) return;
+      if(el.type==='checkbox'||el.type==='radio'){ if(el.checked){ (d[el.name]=d[el.name]||[]).push(el.value); } }
+      else d[el.name]=el.value;
+    }); localStorage.setItem(KEY,JSON.stringify(d)); }catch(e){} }
+  function restore(){ try{ var d=JSON.parse(localStorage.getItem(KEY)||'{}');
+      Array.prototype.forEach.call(form.elements,function(el){
+        if(!el.name||!(el.name in d)) return;
+        if(el.type==='checkbox'||el.type==='radio'){ el.checked=(d[el.name]||[]).indexOf(el.value)>=0; }
+        else el.value=d[el.name];
+      }); }catch(e){} }
+
+  // ---- wire up ----
+  document.getElementById('next').addEventListener('click',function(){ go(1); });
+  document.getElementById('back').addEventListener('click',function(){ go(-1); });
+  document.getElementById('download').addEventListener('click',download);
+  document.getElementById('print').addEventListener('click',function(){ window.print(); });
+  document.getElementById('copy').addEventListener('click',function(){
+    navigator.clipboard.writeText(asText()).then(function(){ var b=document.getElementById('copy'); var t=b.textContent; b.textContent='✓ Copied'; setTimeout(function(){b.textContent=t;},1500); });
+  });
+  document.getElementById('startover').addEventListener('click',function(){
+    if(confirm('Clear all answers on this device and start over?')){ localStorage.removeItem(KEY); location.reload(); }
+  });
+  form.addEventListener('change',function(){ applyConditions(); save(); });
+  form.addEventListener('input',save);
+
+  restore(); applyConditions(); show(activeSteps()[0]);
+})();
+</script>
+</body>
+</html>
