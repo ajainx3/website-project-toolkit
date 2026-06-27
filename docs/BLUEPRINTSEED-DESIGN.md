@@ -43,7 +43,7 @@ BlueprintSeed compresses that into a guided intake plus an instant, opinionated 
 
 A two-part, dependency-free toolkit:
 
-1. **Intake questionnaire** *(client-facing)* — a friendly, adaptive form that captures requirements in plain language and saves a portable brief.
+1. **BlueprintSeed Intake** *(client-facing)* — a friendly, adaptive form that captures requirements in plain language and saves a portable brief.
 2. **BlueprintSeed generator** *(team-facing)* — reads those answers and produces a tailored blueprint: architecture, data model, fulfillment, inventory, payments, **compliance**, **roadmap**, a **screen inventory with wireframe mockups**, and **client sign-off gates**. Exports HTML / PDF / Markdown.
 
 ```
@@ -124,8 +124,8 @@ A staged path from today's offline tool to a product corporates could adopt. Hor
 | 3 | Verify domain + trademark availability | ⚪ to do |
 | 4 | Decide hosting/SaaS stack when we reach v1.0 | 🔵 later |
 | 5 | Pricing & target segment (studios → agencies → enterprise) | ⚪ open |
-| 6 | Should the questionnaire become a branded "BlueprintSeed Intake"? | ⚪ open |
+| 6 | Brand the intake as "BlueprintSeed Intake" | 🟢 done |
 
 ---
 
-<p align="center"><sub>BlueprintSeed · product design v0.1.0 · part of the <a href="../README.md">Website Project Toolkit</a></sub></p>
+<p align="center"><sub>BlueprintSeed · product design v0.1.0 · part of <a href="../README.md">BlueprintSeed</a></sub></p>

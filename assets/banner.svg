@@ -1,9 +1,9 @@
 <svg width="100%" viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Website Project Toolkit">
   <rect width="1200" height="300" fill="#4f46e5"/>
   <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
-    <text x="80" y="132" font-size="58" font-weight="700" fill="#ffffff">Website Project Toolkit</text>
-    <text x="82" y="178" font-size="24" fill="#dcdafc">Capture client requirements → auto-generate a build-team design note</text>
-    <text x="82" y="222" font-size="19" fill="#ffffff" opacity="0.9">A reusable, white-label quick-start for web &amp; app projects · runs offline, no dependencies</text>
+    <text x="80" y="132" font-size="58" font-weight="700" fill="#ffffff">BlueprintSeed</text>
+    <text x="82" y="178" font-size="24" fill="#dcdafc">Capture client requirements → auto-generate a build blueprint</text>
+    <text x="82" y="222" font-size="19" fill="#ffffff" opacity="0.9">Plant the brief, grow the build · runs offline, no dependencies</text>
   </g>
   <g fill="#ffffff" opacity="0.16">
     <rect x="1010" y="60" width="120" height="80" rx="10"/>

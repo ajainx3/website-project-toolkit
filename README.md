@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="Website Project Toolkit" width="100%">
+  <img src="assets/banner.svg" alt="BlueprintSeed" width="100%">
 </p>
 
-<h1 align="center">Website Project Toolkit</h1>
+<h1 align="center">BlueprintSeed</h1>
 
 <p align="center">
-  A reusable, white-label quick-start for web &amp; app projects: capture a client's requirements, then auto-generate a build-team design note — complete with UI wireframes for every screen.
+  A reusable, white-label quick-start for web &amp; app projects: capture a client's requirements, then auto-generate a build blueprint — complete with UI wireframes for every screen.
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 
 Two self-contained HTML files that turn a messy, error-prone kick-off into a repeatable, professional process:
 
-1. A **client questionnaire** that captures *what* they need — in plain language.
+1. **BlueprintSeed Intake** — captures *what* they need, in plain language.
 2. **BlueprintSeed** — turns those answers into *how we'll build it*: architecture, scope, compliance, roadmap, and screen mockups — for the project team.
 
 No installs, no accounts, no internet required. Open in any browser.
@@ -29,7 +29,7 @@ No installs, no accounts, no internet required. Open in any browser.
 
 ```mermaid
 flowchart LR
-  A["🧾 Client fills<br/>Questionnaire"] --> B["💾 Saves a<br/>Project Brief"]
+  A["🧾 Client fills<br/>Intake"] --> B["💾 Saves a<br/>Project Brief"]
   B --> C["📧 Emails it back"]
   C --> D["⚙️ BlueprintSeed"]
   D --> E["📐 Blueprint +<br/>UI mockups"]
@@ -41,7 +41,7 @@ The questionnaire embeds the answers invisibly in the saved file; the generator 
 
 | Tool | For | What it does |
 |------|-----|--------------|
-| 📝 **[Website-Project-Questionnaire.html](Website-Project-Questionnaire.html)** | The client | A friendly, step-by-step wizard that adapts to the project type, auto-saves progress, and shows plain-language tax/legal must-haves based on the answers. Exports a *Project Brief* to email back. |
+| 📝 **[BlueprintSeed-Intake.html](BlueprintSeed-Intake.html)** | The client | A friendly, step-by-step wizard that adapts to the project type, auto-saves progress, and shows plain-language tax/legal must-haves based on the answers. Exports a *Project Brief* to email back. |
 | ⚙️ **[BlueprintSeed.html](BlueprintSeed.html)** | The project team | Reads the client's answers and generates a tailored **blueprint**: architecture, data model, fulfillment, inventory, payments, **compliance**, **roadmap**, a **screen inventory with wireframe mockups**, and **client sign-off gates**. Exports HTML / PDF / Markdown. → see the **[BlueprintSeed vision &amp; roadmap](docs/BLUEPRINTSEED-DESIGN.md)** |
 
 ## Why it matters
@@ -54,7 +54,7 @@ The questionnaire embeds the answers invisibly in the saved file; the generator 
 ## Try it
 
 1. Download or clone this repo.
-2. Open **`Website-Project-Questionnaire.html`**, fill a few steps, and save your answers.
+2. Open **`BlueprintSeed-Intake.html`**, fill a few steps, and save your answers.
 3. Open **`BlueprintSeed.html`**, load that file, and click **Generate**.
 
 ## Notes
