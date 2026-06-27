@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Project Design Note Generator</title>
+<title>BlueprintSeed — from requirements to build blueprint</title>
 <style>
   :root{--bg:#f6f7fb;--card:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--accent:#0d9488;--accent-soft:#ecfdf5;--warn:#b45309;--radius:14px;--shadow:0 1px 3px rgba(16,24,40,.06)}
   *{box-sizing:border-box}
@@ -44,13 +44,13 @@
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand">Project Design Note Generator<small>Internal tool · turns a client questionnaire into a build-team design note</small></div>
-    <span class="pill">Generator v0.2.0</span>
+    <div class="brand">BlueprintSeed<small>Turns client requirements into a build blueprint — architecture, scope &amp; UI mockups</small></div>
+    <span class="pill">BlueprintSeed · v0.2.0</span>
   </header>
 
   <div class="card input-card">
     <h1>Load the client's answers</h1>
-    <p class="sub">Use the file the client emailed back (their saved Project Brief), or paste the data, then generate the design note.</p>
+    <p class="sub">Use the file the client emailed back (their saved Project Brief), or paste the data, then generate the blueprint.</p>
     <div class="inputs">
       <div class="row">
         <label><b>Upload brief file&nbsp;</b><input type="file" id="file" accept=".html,.htm,.json"></label>
@@ -60,7 +60,7 @@
         <textarea id="paste" placeholder='{"projectType":["Online store (e-commerce)"], ...}'></textarea>
       </details>
       <div class="row">
-        <button class="primary" id="gen" type="button">Generate design note →</button>
+        <button class="primary" id="gen" type="button">Generate blueprint →</button>
         <span class="err" id="err"></span>
       </div>
     </div>
@@ -68,7 +68,7 @@
 
   <div class="card note hide" id="out"></div>
   <div class="export hide" id="exportBar">
-    <button class="primary" id="download" type="button">⬇ Download design note</button>
+    <button class="primary" id="download" type="button">⬇ Download blueprint</button>
     <button id="print" type="button">🖨 Print / PDF</button>
     <button id="copy" type="button">📋 Copy as Markdown</button>
   </div>
@@ -396,7 +396,7 @@
   function tagify(s){ return s.replace(/\[must\]/g,'<span class="tag must">must-have</span>').replace(/\[rec\]/g,'<span class="tag rec">recommended</span>'); }
   function render(){
     var out=document.getElementById('out');
-    var h='<h1>Design note — '+esc(META.name)+'</h1>'+
+    var h='<h1>Blueprint — '+esc(META.name)+'</h1>'+
       '<div class="meta-grid">'+
       Object.keys({Type:1,Sector:1,Country:1,Launch:1,Budget:1}).map(function(k){
         var v={Type:META.type,Sector:META.sector,Country:META.country,Launch:META.launch,Budget:META.budget}[k];
@@ -413,7 +413,7 @@
   }
   function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
   function markdown(){
-    var m='# Design note — '+META.name+'\n\n'+'- Type: '+META.type+'\n- Sector: '+META.sector+'\n- Country: '+META.country+'\n- Launch: '+META.launch+'\n- Budget: '+META.budget+'\n\n';
+    var m='# Blueprint — '+META.name+'\n\n'+'- Type: '+META.type+'\n- Sector: '+META.sector+'\n- Country: '+META.country+'\n- Launch: '+META.launch+'\n- Budget: '+META.budget+'\n\n';
     SECTIONS.forEach(function(s){ m+='## '+s.title+'\n'; if(s.intro)m+='_'+s.intro+'_\n'; s.items.forEach(function(i){ m+='- '+i.replace(/\[must\]/g,'(must-have)').replace(/\[rec\]/g,'(recommended)')+'\n'; }); m+='\n'; });
     return m;
   }
@@ -439,8 +439,8 @@
   document.getElementById('copy').addEventListener('click',function(){ navigator.clipboard.writeText(markdown()).then(function(){ var b=document.getElementById('copy'),t=b.textContent;b.textContent='✓ Copied';setTimeout(function(){b.textContent=t;},1500); }); });
   document.getElementById('download').addEventListener('click',function(){
     var name=(META.name||'project').replace(/[^a-z0-9]+/gi,'-');
-    var doc='<!doctype html><meta charset="utf-8"><title>Design Note — '+esc(META.name)+'</title><style>body{font:15px/1.6 Arial;max-width:1000px;margin:24px auto;color:#1f2430;padding:0 16px}'+EXPORT_CSS+'</style><body class="note">'+document.getElementById('out').innerHTML+'</body>';
-    var b=new Blob([doc],{type:'text/html'}),a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Design-Note-'+name+'.html'; a.click();
+    var doc='<!doctype html><meta charset="utf-8"><title>Blueprint — '+esc(META.name)+'</title><style>body{font:15px/1.6 Arial;max-width:1000px;margin:24px auto;color:#1f2430;padding:0 16px}'+EXPORT_CSS+'</style><body class="note">'+document.getElementById('out').innerHTML+'</body>';
+    var b=new Blob([doc],{type:'text/html'}),a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Blueprint-'+name+'.html'; a.click();
   });
 })();
 </script>

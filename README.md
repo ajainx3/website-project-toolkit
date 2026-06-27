@@ -21,7 +21,7 @@
 Two self-contained HTML files that turn a messy, error-prone kick-off into a repeatable, professional process:
 
 1. A **client questionnaire** that captures *what* they need — in plain language.
-2. A **design-note generator** that turns those answers into *how we'll build it* — architecture, scope, compliance, roadmap, and screen mockups — for the project team.
+2. **BlueprintSeed** — turns those answers into *how we'll build it*: architecture, scope, compliance, roadmap, and screen mockups — for the project team.
 
 No installs, no accounts, no internet required. Open in any browser.
 
@@ -31,8 +31,8 @@ No installs, no accounts, no internet required. Open in any browser.
 flowchart LR
   A["🧾 Client fills<br/>Questionnaire"] --> B["💾 Saves a<br/>Project Brief"]
   B --> C["📧 Emails it back"]
-  C --> D["⚙️ Design Note<br/>Generator"]
-  D --> E["📐 Design note +<br/>UI mockups"]
+  C --> D["⚙️ BlueprintSeed"]
+  D --> E["📐 Blueprint +<br/>UI mockups"]
 ```
 
 The questionnaire embeds the answers invisibly in the saved file; the generator reads that file and produces the note — nothing is re-typed.
@@ -42,7 +42,7 @@ The questionnaire embeds the answers invisibly in the saved file; the generator 
 | Tool | For | What it does |
 |------|-----|--------------|
 | 📝 **[Website-Project-Questionnaire.html](Website-Project-Questionnaire.html)** | The client | A friendly, step-by-step wizard that adapts to the project type, auto-saves progress, and shows plain-language tax/legal must-haves based on the answers. Exports a *Project Brief* to email back. |
-| ⚙️ **[Design-Note-Generator.html](Design-Note-Generator.html)** | The project team | Reads the client's answers and generates a tailored design note: architecture, data model, fulfillment, inventory, payments, **compliance**, **roadmap**, a **screen inventory with wireframe mockups**, and **client sign-off gates**. Exports HTML / PDF / Markdown. |
+| ⚙️ **[BlueprintSeed.html](BlueprintSeed.html)** | The project team | Reads the client's answers and generates a tailored **blueprint**: architecture, data model, fulfillment, inventory, payments, **compliance**, **roadmap**, a **screen inventory with wireframe mockups**, and **client sign-off gates**. Exports HTML / PDF / Markdown. → see the **[BlueprintSeed vision &amp; roadmap](docs/BLUEPRINTSEED-DESIGN.md)** |
 
 ## Why it matters
 
@@ -55,7 +55,7 @@ The questionnaire embeds the answers invisibly in the saved file; the generator 
 
 1. Download or clone this repo.
 2. Open **`Website-Project-Questionnaire.html`**, fill a few steps, and save your answers.
-3. Open **`Design-Note-Generator.html`**, load that file, and click **Generate**.
+3. Open **`BlueprintSeed.html`**, load that file, and click **Generate**.
 
 ## Notes
 
