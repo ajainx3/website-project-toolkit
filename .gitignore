@@ -1,0 +1,34 @@
+# BlueprintSeed — .gitignore
+# This repo is intentionally just self-contained HTML + docs. Keep it that way.
+
+# secrets & env — NEVER commit
+.env*
+.dev.vars*
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa*
+.npmrc
+secrets.json
+service-account*.json
+
+# node (in case a build is added later)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# temp / generated
+*.tmp
+_*.js
+_*.html
+
+# client data — never commit real filled-in briefs
+Project-Brief-*.html
+Blueprint-*.html
